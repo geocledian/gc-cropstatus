@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <meta charset="utf-8">
+  
+  <title>GC crop status</title>
+
+
+  <!--GC cropstatus component begin -->
+  
+  <!-- loads also dependent css files via @import -->
+  <link href="css/gc-cropstatus.css" rel="stylesheet">
+  <!-- init script for components -->
+  <script type="text/javascript" src="js/gc-cropstatus-init.js"></script>
+  
+  <!--GC cropstatus component end -->
+
+  <style>
+    body {
+      font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+      line-height: 1.1em;
+      font-size: 0.9rem;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="gc-app" class="is-mobile section">
+    <div class="is-inline-block" style="width: 300px; margin: 20px;">
+      <gc-cropstatus chartid="cropstatus1" 
+                gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
+                gc-host="geocledian.com" 
+                gc-parcel-id="4483"
+                sdate="2018-07-13"
+                mode="pie"></gc-cropstatus>
+    </div>
+    <div class="is-inline-block" style="width: 300px; margin: 20px">
+      <gc-cropstatus chartid="cropstatus3" 
+              gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
+              gc-host="geocledian.com" 
+              gc-parcel-id="4483"
+              sdate="2018-05-13"
+              mode="donut"
+              show-title-block="false"
+              show-date-selector="false"></gc-cropstatus>
+    </div>
+    <div class="is-inline-block" style="width: 300px; margin: 20px;">
+      <gc-cropstatus chartid="cropstatus2" 
+              gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
+              gc-host="geocledian.com" 
+              gc-parcel-id="4483"
+              sdate="2018-07-13"
+              mode="gauge"></gc-cropstatus>
+    </div>
+    
+  </div>
+
+</body>
+
+</html>
