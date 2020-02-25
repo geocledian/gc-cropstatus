@@ -44,7 +44,8 @@ You have to add some dependencies in the head tag of the container website.
 Then you may create the widget(s) with custom HTML tags anywhere in the body section of the website. Make sure to use an unique identifier for each chart component (chartid) and configure a date (sdate).
 Additionally you have the following configuration options:
   - mode: "gauge" (default), "pie", "donut"
-  - show-query-selector: "true" (default), "false"
+  - show-date-selector: "true" (default), "false"
+  - show-title-block: "true" (default), "false"
 
 >If you want to change the id of the parent div ("gc-app") you'll have to change this divs' id also in the init script `gc-cropstatus-init.js`, method `initComponent()`.
 
