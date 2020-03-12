@@ -83,7 +83,30 @@ function initComponent() {
         /* when ready, init global vue root instance */
         vmRoot = new Vue({
             //must match the id attribute of the div tag which contains the widget(s)
-            el: "#gc-app"
+            el: "#gc-app",
+            methods: {
+              setParcelId(widgetIndex, parcelId) {
+                /* Setter for a new parcel id in the given widget. 
+                    One has to pass the 0-based index for the the widget to change the parcel id. 
+                    Widgets get added to the main Vue.js root instance in the order of declaration in HTML.
+                    */
+                try {
+                  if (widgetIndex != undefined && parcelId != undefined) {
+                    if (this.$children[widgetIndex]) {
+                      this.$children[widgetIndex].gcParcelId = parcelId;
+                    }
+                  }
+                  else {
+                    throw "Not enough arguments for function setParcelId(widgetIndex, parcelId)!";
+                  }
+                }
+                catch (ex) {
+                  console.error("Could not set the parcel id to " + parcelId + "!");
+                  console.error(ex);
+                }
+              }
+            }
+              
         });
     });
 }
