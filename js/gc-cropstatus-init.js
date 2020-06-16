@@ -1,18 +1,39 @@
 /*
  Vue.js Geocledian crop status component
- created: 2019-11-04, jsommer
- last update: 2020-02-21, jsommer
+
+ init script for using the component without any existent outer Vue instance
+
+ created:     2019-11-04, jsommer
+ last update: 2020-04-29, jsommer
  version: 0.9
 */
 
 // root Vue instance
 var vmRoot;
 
+// global gc locale object
+// every component may append its data to this
+var gcLocales = { en: {}, de: {} };
+
+// global i18n object
+var i18n;
+
 // init dependent javascript libs
 const libs = ['https://unpkg.com/vue@2.6.11/dist/vue.min.js',
+              'https://unpkg.com/vue-i18n@8.17.5/dist/vue-i18n.js',
               'js/d3.v3.min.js', // v4.13.0 
               'js/c3.min.js' // v0.7.11
             ];
+
+function gcGetBaseURL() {
+    //get the base URL relative to the current script - regardless from where it was called
+    // js files are loaded relative to the page
+    // css files are loaded relative to its file
+    let scriptURL = document.getElementById("gc-cropstatus-init");
+    let url = new URL(scriptURL.src);
+    let basename = url.pathname.substring(url.pathname.lastIndexOf('/')+1);
+    return url.href.split('/js/'+basename)[0];
+}
 
 function loadJSscriptDeps(url_list, final_callback) {
     /* 
@@ -46,7 +67,13 @@ function loadJSscriptDeps(url_list, final_callback) {
       }
   
       let url = url_list.shift();
-      //console.debug("current URL: "+ url);
+      console.debug("current URL: "+ url);
+
+      if (url && !url.includes('http')) {
+        url = gcGetBaseURL() + "/" +url;
+        console.debug('loadNext()');
+        console.debug(url);
+      }
 
       // check google URL for valid key
       if (url && url.includes("YOUR_VALID_API_KEY_FROM_GOOGLE")) { 
@@ -56,6 +83,7 @@ function loadJSscriptDeps(url_list, final_callback) {
 
       // prevent multiple loading of same script urls
       if (url && !scriptExists(url)) { 
+
         let script = document.createElement("script");  // create a script DOM node
         script.type = 'text/javascript';
         script.src = url;  // set its src to the provided URL
@@ -77,14 +105,29 @@ function initComponent() {
     /* 
       inits component
     */
+    i18n = new VueI18n({
+      locale: 'en', // set locale
+      fallbackLocale: 'en',
+      messages: gcLocales, // set locale messages
+    })
+
     // load map component dynamically
     // change for DEBUG to js/gc-cropstatus.js
     loadJSscript("js/gc-cropstatus.min.js", function() {
+
         /* when ready, init global vue root instance */
-        vmRoot = new Vue({
+        var vmRoot = new Vue({
             //must match the id attribute of the div tag which contains the widget(s)
             el: "#gc-app",
+            i18n: i18n,
+            created() {
+              console.debug("gc-cropstatus-init created!");
+              i18n.locale = this.language;
+            },
             methods: {
+              language (newValue, oldValue) {
+                i18n.locale = newValue;
+              },
               setParcelId(widgetIndex, parcelId) {
                 /* Setter for a new parcel id in the given widget. 
                     One has to pass the 0-based index for the the widget to change the parcel id. 
@@ -108,16 +151,19 @@ function initComponent() {
             }
               
         });
+        
     });
 }
 function loadJSscript (url, callback) {
     /* 
       loads javascript library async and appends it to the DOM
       */
+    console.debug("gc-cropstatus-init - loadJSscript()");
     let script = document.createElement("script");  // create a script DOM node
     script.type = 'text/javascript';
-    script.src = url;  // set its src to the provided URL
-    script.async = true;
+    script.src = gcGetBaseURL() + "/" + url;  // set its src to the provided URL
+    console.debug(script.src);
+    script.async = false;
     document.head.appendChild(script);  // add it to the end of the head section of the page
     //if ready, call the callback function 
     script.onload = script.onreadystatechanged = function () {

@@ -6,9 +6,39 @@
 */
 "use strict";
 
+//language strings
+const gcCropstatusLocales = {
+  "en": {
+    "options": { "title": "Crop status" },
+    "description": { 
+      "id": "ID",
+      "parcel": "Parcel",
+      "sdate": "Sensing date"
+    },
+    "legend" : { 
+      "uncultivated_area" : "uncultivated area",
+      "area_under_crops" : "area under crops",
+      "fraction_under_crops" : "fraction under crops",
+    }
+  },
+  "de": {
+    "options": { "title": "Feldzustand" },
+    "description": { 
+      "id": "Nr",
+      "parcel": "Feld",
+      "sdate": "Aufnahmedatum"
+    },
+    "legend" : { 
+      "uncultivated_area" : "unbewirtschaftete Fläche",
+      "area_under_crops" : "bewirtschaftete Fläche",
+      "fraction_under_crops" : "Anteil bewirtschafteter Fläche",
+    }
+  },
+}
+
 Vue.component('gc-cropstatus', {
   props: {
-    chartid: {
+    gcWidgetId: {
       type: String,
       default: 'cropstatus1',
       required: true
@@ -24,78 +54,81 @@ Vue.component('gc-cropstatus', {
     gcParcelId: {
       default: -1
     },
-    sdate: {
+    gcSelectedDate: {
       type: String,
-      default: ""
+      default: "" // date for sending against the API
     },
-    mode: {
+    gcMode: {
       type: String,
       default: "gauge" // "pie" || "gauge" || "donut"
     },
-    showOptions: {
+    gcAvailableOptions: {
       type: String,
-      default: "false" // unused currently
+      default: "title,description,dateSelector,legend,logo" // available options
     },
-    showDateSelector: {
-      type: String,
-      default: "true" // show or hide the date selector
+    gcWidgetCollapsed: {
+      type: Boolean,
+      default: true // or true
     },
-    showTitleBlock: {
+    gcLanguage: {
       type: String,
-      default: "true" // show or hide title block with base information
+      default: 'en' // 'en' | 'de'
+    },
+    gcLegendPosition: {
+      type: String,
+      default: 'inset' // 'bottom', 'right' or 'inset'
     }
   },
-  template: `<div :id="chartid" class="gc-cropstatus" style="max-width: 18.0rem;">          
-            
-            <p class="chartOptionsTitle is-size-6 is-orange is-inline-block" style="margin-bottom: 1.0rem; cursor: pointer;" 
-                v-on:click="toggleChartOptions" v-if="this.showOptions == 'true'">
-               Chart options 
-              <i class="fas fa-angle-down fa-sm"></i>
-            </p>
+  template: `<div :id="gcWidgetId" class="gc-cropstatus" style="max-width: 18.0rem; min-width: 8rem;">       
 
-            <div :id="'chartOptions_'+chartid" class="chartOptions is-horizontal is-flex is-hidden"
-                  style="max-height: 6.6rem !important;">
-            </div><!-- chart options -->
+              <p class="gc-options-title is-size-6 is-orange" style="cursor: pointer;" 
+                v-on:click="toggleCropstatus"   
+                v-show="this.availableOptions.includes('title')">
+                {{ $t('options.title') }}
+                <i :class="[gcWidgetCollapsed ? '': 'is-active', 'fas', 'fa-angle-down', 'fa-sm']"></i>
+              </p>
+              <div :class="[gcWidgetCollapsed ? '': 'is-hidden']">
+               <div class="is-flex">
+                <div :id="'desc_' + gcWidgetId" class="is-grey" v-show="this.availableOptions.includes('description')">
+                  <!-- span :id="'title_' + gcWidgetId" class="has-text-weight-bold is-size-6">Crop status</span><br -->
+                  <span :id="'subtitle_' + gcWidgetId" class="has-text-weight-bold is-size-7">{{ $t('description.parcel') }} {{ $t('description.id') }} :{{this.currentParcelID}}</span><br>
+                  <span :id="'sdate_' + gcWidgetId" class="is-size-7" v-if="this.crop_status.hasOwnProperty('crop_status')">{{ $t('description.sdate') }}:{{this.crop_status.crop_status.sensing_date}}</span>
+                </div>
 
-            <div>
-              <div :id="'titleBlock_' + chartid" class="is-grey is-inline-block" v-if="showTitleBlock == 'true'">
-                <span :id="'title_' + chartid" class="has-text-weight-bold is-size-6">Crop status</span><br>
-                <span :id="'subtitle_' + chartid"class="has-text-weight-bold is-size-7">Parcel ID: {{this.currentParcelID}}</span><br>
-                <span :id="'sdate_' + chartid"class="is-size-7" v-if="this.crop_status.hasOwnProperty('crop_status')">Sensing date: {{this.crop_status.crop_status.sensing_date}}</span>
-              </div>
+                <div class="field-body is-horizontal" style="margin-left: 1em;"
+                    v-show="this.availableOptions.includes('dateSelector')">
+                  <div class="control has-icons-left" style="padding-bottom: 0px; max-width: 6.4rem;">
+                    <input :id="'inpSdate_'+this.gcWidgetId" type="text" class="input is-small" placeholder="[YYYY-MM-DD]"
+                      v-model="selectedDate">
+                    <span class="icon is-small is-left">
+                      <i class="fas fa-clock fa-lg"></i>
+                    </span>
+                  </div>
+                </div>
+                </div>
+                <!-- watermark -->
+                <div :class="[this.availableOptions.includes('logo') ? 'is-inline-block': 'is-hidden', 'is-pulled-right']"
+                  style="opacity: 0.65;">
+                  <span style="vertical-align: top; font-size: 0.7rem;">powered by</span><br>
+                  <img src="img/logo.png" alt="geo|cledian" style="width: 100px; margin: -10px 0;">
+                </div>
+               </div>
 
-              <div :id="'sDate_'+this.chartid" class="field-body is-horizontal is-inline-block is-pulled-right" style="vertical-align: top;" v-if="showDateSelector=='true'">
-                <div class="control has-icons-left" style="padding-bottom: 10px; max-width: 6.4rem;">
-                  <input :id="'inpSdate_'+this.chartid" type="text" class="input is-small"
-                  placeholder="[YYYY-MM-DD]" v-model="sdate">
-                  <span class="icon is-small is-left">
-                    <i class="fas fa-clock fa-lg"></i>
-                  </span>
+                <div :id="'chartNotice_'+gcWidgetId" class="content is-hidden"></div>
+
+                <div :id="'chartSpinner_'+gcWidgetId" class="chartSpinner spinner is-hidden">
+                  <div class="rect1"></div>
+                  <div class="rect2"></div>
+                  <div class="rect3"></div>
+                  <div class="rect4"></div>
+                  <div class="rect5"></div>
+                </div>
+
+                <div style="position: relative;">
+                  <div :id="'chart_'+gcWidgetId" :class="['gc-cropstatus-chart-'+this.gcMode]" style="max-height: 160px!important;">
+                  </div>
                 </div>
               </div>
-              <!-- watermark -->
-              <div class="is-pulled-right is-inline-block" style="opacity: 0.65;">
-                <span style="verticalalign: top; font-size: 0.7rem;">powered by</span><br>
-                <img src="img/logo.png" alt="geo|cledian" style="width: 100px; margin: -10px 0;">
-              </div>
-            </div>
-
-            <div :id="'chartNotice_'+chartid" class="content is-hidden"></div>
-            
-            <div :id="'chartSpinner_'+chartid" class="chartSpinner spinner is-hidden">
-              <div class="rect1"></div>
-              <div class="rect2"></div>
-              <div class="rect3"></div>
-              <div class="rect4"></div>
-              <div class="rect5"></div>
-            </div>
-
-
-          <div style="position: relative;">
-            <div :id="'chart_'+chartid" class="">
-            </div>
-          </div>
-
           </div>
           <!-- chart -->`,
   data: function () {
@@ -108,12 +141,32 @@ Vue.component('gc-cropstatus', {
       offset: 0,
       pagingStep: 6000,
       total_parcel_count: 250,
-      chartLegendVisible: true,
       crop_status : {},
       inpSdatePicker: undefined,
+      internalSelectedDate: "", //for internal use only
     }
   },
   computed: {
+    apiKey: {
+      get: function () {
+          return this.gcApikey;
+      }
+    },
+    apiHost: {
+        get: function () {
+            return this.gcHost;
+        }
+    },
+    apiBaseUrl: {
+        get: function () {
+            return this.gcApiBaseUrl;
+      }
+    },
+    apiSecure: {
+      get: function () {
+          return this.gcApiSecure;
+      }
+    },
     currentParcelID:  {
       get: function() {
           return this.gcParcelId;
@@ -122,39 +175,88 @@ Vue.component('gc-cropstatus', {
         this.gcParcelId = newValue;
       }
     },
-    chartWidth: function() {
-        console.debug("clientwidth "+document.getElementById(this.chartid).clientWidth);
-        console.debug("offsetwidth "+document.getElementById(this.chartid).offsetWidth);
-        return parseInt(document.getElementById(this.chartid).offsetWidth);
+    // chartWidth: function() {
+    //     console.debug("clientwidth "+document.getElementById(this.gcWidgetId).clientWidth);
+    //     console.debug("offsetwidth "+document.getElementById(this.gcWidgetId).offsetWidth);
+    //     return parseInt(document.getElementById(this.gcWidgetId).offsetWidth);
+    // },
+    // chartHeight: function() {
+    //     console.debug("clientheight "+document.getElementById(this.gcWidgetId).clientHeight);
+    //     console.debug("offsetheight "+document.getElementById(this.gcWidgetId).offsetHeight);
+    //     //return parseInt(document.getElementById(this.gcWidgetId).offsetHeight);
+    //     return parseInt(document.getElementById(this.gcWidgetId).style.height);
+    // },
+    selectedDate: {
+      get: function() {
+        // either outer selected date
+        if (this.gcSelectedDate.length > 0) {
+          if (this.isDateValid(this.gcSelectedDate))
+            return this.gcSelectedDate;
+        }// or internal selected date
+        else {
+          if (this.isDateValid(this.internalSelectedDate))
+            return this.internalSelectedDate;
+        }
+      },
+      set: function(value) {
+        console.debug("selectedDate - setter: "+value);
+
+        if (this.isDateValid(value)) {
+          //should set gcSelectedDate from root to the new value
+          this.$root.$emit("queryDateChange", value);
+          this.internalSelectedDate = value;
+        }
+      }
     },
-    chartHeight: function() {
-        console.debug("clientheight "+document.getElementById(this.chartid).clientHeight);
-        console.debug("offsetheight "+document.getElementById(this.chartid).offsetHeight);
-        //return parseInt(document.getElementById(this.chartid).offsetHeight);
-        return parseInt(document.getElementById(this.chartid).style.height);
+    availableOptions: {
+      get: function() {
+        return (this.gcAvailableOptions.split(","));
+      }
+    },
+    currentLanguage: {
+      get: function() {
+        // will always reflect prop's value 
+        return this.gcLanguage;
+      },
     },
   },
-  created: function () {},
+  i18n: { 
+    locale: this.currentLanguage,
+    messages: gcCropstatusLocales
+  },
+  created: function () {
+    console.debug("cropstatus! - created()");
+    this.changeLanguage();
+  },
   /* when vue component is mounted (ready) on DOM node */
   mounted: function () {
 
+    try {
+      this.changeLanguage();
+    } catch (ex) {}
+
     //handle chart resizing
-    window.addEventListener('resize', this.triggerResize);
+    //window.addEventListener('resize', this.triggerResize);
 
     //console.log(this);
-    document.getElementById("chart_" + this.chartid).classList.add("is-hidden");
-    document.getElementById("chartSpinner_" + this.chartid).classList.remove("is-hidden");
+    document.getElementById("chart_" + this.gcWidgetId).classList.add("is-hidden");
+    document.getElementById("chartSpinner_" + this.gcWidgetId).classList.remove("is-hidden");
 
     /* init chart */
     this.chart = c3.generate({
-      bindto: '#chart_'+this.chartid,
-      size: {
-        width: this.chartWidth, 
-        height: this.chartHeight
-      },
+      bindto: '#chart_'+this.gcWidgetId,
+      // fixHeightResizing: true,
+      // size: {
+      //   width: this.chartWidth, 
+      //   height: this.chartHeight
+      // },
       data: {
         columns: [],
-        type: this.mode, // 'gauge','pie' or 'donut'
+        type: this.gcMode, // 'gauge','pie' or 'donut'
+      },
+      legend: {
+        hide: !this.availableOptions.includes('legend') ? ["area under crops", "uncultivated area", "fraction under crops"] : [],
+        position: this.gcLegendPosition
       }
     });
 
@@ -166,13 +268,13 @@ Vue.component('gc-cropstatus', {
 
     //init datepickers - load external Javascript file in this component
     // async and call the given function when ready
-    if (this.showDateSelector === 'true') {
+    if (this.availableOptions.includes('dateSelector')) {
       this.loadJSscript("css/bulma-ext/bulma-calendar.min.js", function() {
 
-          this.inpSdatePicker = new bulmaCalendar( document.getElementById( 'inpSdate_'+this.chartid ), {
-            startDate: new Date(Date.parse(this.sdate)), // Date selected by default
+          this.inpSdatePicker = new bulmaCalendar( document.getElementById( 'inpSdate_'+this.gcWidgetId ), {
+            startDate: new Date(Date.parse(this.selectedDate)), // Date selected by default
             dateFormat: 'yyyy-mm-dd', // the date format `field` value
-            lang: 'en', // internationalization
+            lang: this.currentLanguage, // internationalization
             overlay: false,
             closeOnOverlayClick: true,
             closeOnSelect: true,
@@ -180,7 +282,7 @@ Vue.component('gc-cropstatus', {
             onSelect: function (e) { 
                         // hack +1 day - don't know why we need this here - timezone?
                         var a = new Date(e.valueOf() + 1000*3600*24);
-                        this.sdate = a.toISOString().split("T")[0]; //ISO String splits at T between date and time
+                        this.selectedDate = a.toISOString().split("T")[0]; //ISO String splits at T between date and time
                         }.bind(this),
           });
         }.bind(this)
@@ -194,12 +296,12 @@ Vue.component('gc-cropstatus', {
 
       this.handleCurrentParcelIDchange(newValue, oldValue);
     },
-    sdate: function (newValue, oldValue) {
+    selectedDate: function (newValue, oldValue) {
 
       console.debug("event - sdateChange");
 
-      if (this.isDateValid(this.sdate)) {
-        this.getCropStatus(this.getCurrentParcel().parcel_id, this.sdate);
+      if (this.isDateValid(this.selectedDate)) {
+        this.getCropStatus(this.getCurrentParcel().parcel_id, this.selectedDate);
       }
     },
     crop_status: {
@@ -211,23 +313,45 @@ Vue.component('gc-cropstatus', {
         this.createChartData();
       },
       deep: true
-    }
+    },
+    currentLanguage(newValue, oldValue) {
+      this.changeLanguage();
+      //rebuild chart if language changed, otherwise localization will not refresh
+      this.createChartData();
+    },
+    gcMode(newValue, oldValue) {
+      // gauge shall always have bottom position for legend
+      if (newValue === "gauge") {
+        this.gcLegendPosition = "bottom";
+      }
+      this.createChartData();
+    },
+    gcLegendPosition(newValue, oldValue) {
+      // gauge shall always have bottom position for legend
+      if (newValue === "inset" && this.gcMode === "gauge") {
+        this.gcLegendPosition = "bottom";
+      }
+      this.createChartData();
+    },
   },
   methods: {
-    triggerResize: function () {
-      console.debug("triggerResize()");
-
-      /*console.log("clientwidth "+document.getElementById(this.chartid).clientWidth);
-      console.log("offsetwidth "+document.getElementById(this.chartid).offsetWidth);*/
-      //this.chart.resize();
-      //this.chart.internal.selectChart.style('max-height', 'none');
-
-      this.chart.resize({
-                //height: document.getElementById(this.chartid).offsetHeight * 0.6, 
-                width: document.getElementById(this.chartid).offsetWidth - 20
-                        });
-
+    toggleCropstatus: function () {
+      this.gcWidgetCollapsed = !this.gcWidgetCollapsed;
     },
+    // triggerResize: function () {
+    //   console.debug("triggerResize()");
+
+    //   /*console.log("clientwidth "+document.getElementById(this.gcWidgetId).clientWidth);
+    //   console.log("offsetwidth "+document.getElementById(this.gcWidgetId).offsetWidth);*/
+    //   //this.chart.resize();
+    //   //this.chart.internal.selectChart.style('max-height', 'none');
+
+    //   this.chart.resize({
+    //             //height: document.getElementById(this.gcWidgetId).offsetHeight * 0.6, 
+    //             width: document.getElementById(this.gcWidgetId).offsetWidth - 20
+    //                     });
+
+    // },
     handleCurrentParcelIDchange: function () {
 
       console.debug("methods - handleCurrentParcelIDchange");
@@ -237,7 +361,7 @@ Vue.component('gc-cropstatus', {
       
         this.filterDetailData();
 
-        this.getCropStatus(this.getCurrentParcel().parcel_id, this.sdate);
+        this.getCropStatus(this.getCurrentParcel().parcel_id, this.selectedDate);
       }
     },
     //returns detailed data from REST service by passing the selected parcel_id
@@ -251,11 +375,11 @@ Vue.component('gc-cropstatus', {
     },
     getCropStatus: function(parcel_id, sdate) {
 
-      try { document.getElementById("sDate_"+this.chartid).classList.remove("is-hidden"); } catch (ex) {}
-      try { document.getElementById("titleBlock_" + this.chartid).classList.remove("is-hidden"); } catch (ex) {}
-      document.getElementById("chartNotice_"+this.chartid).classList.add("is-hidden");
-      document.getElementById("chart_" + this.chartid).classList.add("is-hidden");
-      document.getElementById("chartSpinner_" + this.chartid).classList.remove("is-hidden");
+      try { document.getElementById("sDate_"+this.gcWidgetId).classList.remove("is-hidden"); } catch (ex) {}
+      try { document.getElementById("desc_" + this.gcWidgetId).classList.remove("is-hidden"); } catch (ex) {}
+      document.getElementById("chartNotice_"+this.gcWidgetId).classList.add("is-hidden");
+      document.getElementById("chart_" + this.gcWidgetId).classList.add("is-hidden");
+      document.getElementById("chartSpinner_" + this.gcWidgetId).classList.remove("is-hidden");
   
       const productName = "status";
       
@@ -282,20 +406,20 @@ Vue.component('gc-cropstatus', {
 
             if (tmp.content == "key is not authorized") {
               // show message, hide spinner
-              try { document.getElementById("sDate_"+this.chartid).classList.add("is-hidden"); } catch (ex) {}
-              try { document.getElementById("titleBlock_" + this.chartid).classList.add("is-hidden"); } catch (ex) {}
-              document.getElementById("chartNotice_" + this.chartid).innerHTML = "Sorry, the given API key is not authorized!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a> for a valid API key.";
-              document.getElementById("chartNotice_" + this.chartid).classList.remove("is-hidden");
-              document.getElementById("chartSpinner_" + this.chartid).classList.add("is-hidden");
+              try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+              try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+              document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, the given API key is not authorized!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a> for a valid API key.";
+              document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
+              document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
               return;
             }
             if (tmp.content == 	"api key validity expired") {
                 // show message, hide spinner
-                try { document.getElementById("sDate_"+this.chartid).classList.add("is-hidden"); } catch (ex) {}
-                try { document.getElementById("titleBlock_" + this.chartid).classList.add("is-hidden"); } catch (ex) {}
-                document.getElementById("chartNotice_" + this.chartid).innerHTML = "Sorry, the given API key's validity expired!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a>for a valid API key.";
-                document.getElementById("chartNotice_" + this.chartid).classList.remove("is-hidden");
-                document.getElementById("chartSpinner_" + this.chartid).classList.add("is-hidden");
+                try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+                try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+                document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, the given API key's validity expired!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a>for a valid API key.";
+                document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
+                document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
                 return;
             }
             
@@ -306,11 +430,11 @@ Vue.component('gc-cropstatus', {
             }
           } catch (err) {
             console.error(err);
-            try { document.getElementById("sDate_"+this.chartid).classList.add("is-hidden"); } catch (ex) {}
-            try { document.getElementById("titleBlock_" + this.chartid).classList.add("is-hidden"); } catch (ex) {}
-            document.getElementById("chartNotice_" + this.chartid).innerHTML = "Sorry, an error occurred!<br>Please check the console log for more information.";
-            document.getElementById("chartNotice_" + this.chartid).classList.remove("is-hidden");
-            document.getElementById("chartSpinner_" + this.chartid).classList.add("is-hidden");
+            try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+            try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+            document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, an error occurred!<br>Please check the console log for more information.";
+            document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
+            document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
           }
         }
       }.bind(this);
@@ -325,21 +449,21 @@ Vue.component('gc-cropstatus', {
       let columns = [];
 
       if (this.crop_status.hasOwnProperty("crop_status")) {
-        if (this.mode == "pie" || this.mode == "donut") {
+        if (this.gcMode == "pie" || this.gcMode == "donut") {
           // format values to 2 decimals
           columns[0] = ["area under crops"].concat(this.formatDecimal(this.crop_status.crop_status.area_under_crops, 2));
           // calculate relative uncultivated area from parcel's area and inverse fraction under crop
           const uncultivated_area = this.crop_status.summary.area * (1.0 - this.crop_status.crop_status.fraction_under_crops);
           columns[1] = ["uncultivated area"].concat(this.formatDecimal(uncultivated_area, 2));
         }
-        if (this.mode == "gauge")  {
+        if (this.gcMode == "gauge")  {
           // format values to 2 decimals
           columns[0] = ["fraction under crops"].concat(this.formatDecimal(this.crop_status.crop_status.fraction_under_crops *100, 2));
         }
 
-        document.getElementById("chartSpinner_" + this.chartid).classList.add("is-hidden");
-        document.getElementById("chart_" + this.chartid).classList.remove("is-hidden");
-        document.getElementById("chartNotice_"+this.chartid).classList.add("is-hidden");
+        document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
+        document.getElementById("chart_" + this.gcWidgetId).classList.remove("is-hidden");
+        document.getElementById("chartNotice_"+this.gcWidgetId).classList.add("is-hidden");
 
         this.createChart(columns);
       }
@@ -348,7 +472,7 @@ Vue.component('gc-cropstatus', {
 
       let color_options = {};
 
-      if (this.mode == "gauge") {
+      if (this.gcMode == "gauge") {
         color_options = {
           // four color levels for the percentage values: red (0-24%), orange (25-49%), yellow (50-74%), green (> 75%)
           pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'], 
@@ -362,7 +486,7 @@ Vue.component('gc-cropstatus', {
       let pie_options = {};
       let pie_color_options = {};
 
-      if (this.mode == "pie" || this.mode == "donut") {
+      if (this.gcMode == "pie" || this.gcMode == "donut") {
         pie_options = {
           label: {
               format: function (value, ratio, id) {
@@ -374,22 +498,30 @@ Vue.component('gc-cropstatus', {
       }
   
       this.chart = c3.generate({
-        bindto: '#chart_'+this.chartid,
-        //fixHeightResizing: true,
-        size: {
-          width: this.chartWidth,  
-          height: this.chartHeight
-        },
+        bindto: '#chart_'+this.gcWidgetId,
+        // size: {
+        //   width: this.chartWidth,  
+        //   height: this.chartHeight
+        // },
         data: {
           columns: [],
-          type: this.mode, 
+          type: this.gcMode, 
           colors: pie_color_options,
+          names: { //with i18n
+            "uncultivated area": this.$t("legend.uncultivated_area"),
+            "area under crops": this.$t("legend.area_under_crops"),
+            "fraction under crops": this.$t("legend.fraction_under_crops"),
+          },
         },
         pie: pie_options,
         color: color_options,
         transition: {
-            duration: 750
+            duration: 500
         },
+        legend: {
+          hide: !this.availableOptions.includes('legend') ? ["area under crops", "uncultivated area", "fraction under crops"] : [],
+          position: this.gcLegendPosition
+        }
       });
 
       // toggles animation of chart
@@ -397,18 +529,8 @@ Vue.component('gc-cropstatus', {
 
     },
     /* GUI helper */
-    toggleChartOptions: function() {
-      let isGraphOptionsActive = false;
-      isGraphOptionsActive = !(document.getElementById("chartOptions_"+this.chartid).classList.contains("is-hidden"));
-  
-      if (isGraphOptionsActive) {
-          document.getElementById("chartOptions_"+this.chartid).classList.add("is-hidden");
-          document.getElementById(this.chartid).getElementsByClassName("chartOptionsTitle")[0].children[0].classList.remove("is-active");
-      }
-      else {
-          document.getElementById("chartOptions_"+this.chartid).classList.remove("is-hidden");
-          document.getElementById(this.chartid).getElementsByClassName("chartOptionsTitle")[0].children[0].classList.add("is-active");
-      }
+    changeLanguage() {
+      this.$i18n.locale = this.currentLanguage;
     },  
     /* helper functions */
     removeFromArray: function(arry, value) {
@@ -457,8 +579,11 @@ Vue.component('gc-cropstatus', {
       }
     },
     loadJSscript: function (url, callback) {
+      
       let script = document.createElement("script");  // create a script DOM node
-      script.src = url;  // set its src to the provided URL
+      script.src = gcGetBaseURL() + "/" + url;  // set its src to the provided URL
+      script.async = true;
+      console.debug(script.src);
       document.body.appendChild(script);  // add it to the end of the head section of the page (could change 'head' to 'body' to add it to the end of the body section instead)
       script.onload = function () {
         callback();

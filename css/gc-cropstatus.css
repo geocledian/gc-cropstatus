@@ -28,16 +28,14 @@
     background-color: #EF7D00 !important;
 }
 
-.chartOptionsTitle > i {
+.gc-options-title > i {
     transform: rotate(0deg);
     transition: all 0.15s ease-in;
-    -webkit-transition: all .15s ease-in;
 }
-
-.chartOptionsTitle:hover {
+.gc-options-title:hover {
     color:#ff9800  !important;
 }
-.chartOptionsTitle > i.is-active {
+.gc-options-title > i.is-active {
     color: #9D9D9C !important;
     transform: rotate(180deg);
     transition: all 0.15s ease-in;
@@ -59,7 +57,7 @@
 }
 
 .gc-cropstatus {
-    /*max-height: none!important;*/
+    /* max-height: auto!important; */
     margin-top: 0.15rem;
     margin-right: 0.25rem;
     margin-left: 0.25rem;
@@ -78,7 +76,22 @@
     vertical-align: top;
     overflow: hidden;*/
 }
-
+.gc-cropstatus-chart-gauge {
+    margin: 0 auto;
+    text-align: center;
+    height: 9em;
+}
+.gc-cropstatus-chart-donut{
+    margin: 0 auto;
+    text-align: center;
+    height: 16em;
+}
+.gc-cropstatus-chart-pie{
+    /* margin: 0 auto; */
+    text-align: center; 
+    height: 11em;
+    margin-bottom: -3em;
+}
 /*  calendar */
 
 .calendar {
@@ -147,11 +160,11 @@
 
 /* spinner */
 .spinner {
-    margin: 100px auto;
+    margin: 6em auto;
     width: 90px;
     height: 60px;
     text-align: center;
-    font-size: 15px;
+    font-size: 11px;
 }
 
 .spinner>div {

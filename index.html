@@ -13,7 +13,7 @@
   <!-- loads also dependent css files via @import -->
   <link href="css/gc-cropstatus.css" rel="stylesheet">
   <!-- init script for components -->
-  <script type="text/javascript" src="js/gc-cropstatus-init.js"></script>
+  <script id="gc-cropstatus-init" type="text/javascript" src="js/gc-cropstatus-init.js"></script>
   
   <!--GC cropstatus component end -->
 
@@ -23,37 +23,49 @@
       line-height: 1.1em;
       font-size: 0.9rem;
     }
+    .gc-cropstatus-chart-gauge {
+      height: 9em;
+      width: 14em;
+    }
   </style>
 
 </head>
 
 <body>
   <div id="gc-app" class="is-mobile section">
-    <div class="is-inline-block" style="width: 300px; margin: 20px;">
+    <!-- div class="is-inline-block" style="width: 300px; margin: 20px;">
       <gc-cropstatus chartid="cropstatus1" 
                 gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
                 gc-host="geocledian.com" 
                 gc-parcel-id="4483"
-                sdate="2018-07-13"
-                mode="pie"></gc-cropstatus>
+                gc-selected-date="2018-07-13"
+                gc-mode="pie"></gc-cropstatus>
     </div>
     <div class="is-inline-block" style="width: 300px; margin: 20px">
       <gc-cropstatus chartid="cropstatus3" 
               gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
               gc-host="geocledian.com" 
               gc-parcel-id="4483"
-              sdate="2018-05-13"
-              mode="donut"
-              show-title-block="false"
-              show-date-selector="false"></gc-cropstatus>
-    </div>
-    <div class="is-inline-block" style="width: 300px; margin: 20px;">
-      <gc-cropstatus chartid="cropstatus2" 
+              gc-selected-date="2018-05-13"
+              gc-mode="donut"
+              ></gc-cropstatus>
+    </div !-->
+    <div class="is-inline-block" style="margin: 20px;">
+      <gc-cropstatus gc-widget-id="cropstatus2" 
               gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
               gc-host="geocledian.com" 
               gc-parcel-id="4483"
-              sdate="2018-07-13"
-              mode="gauge"></gc-cropstatus>
+              gc-legend-position="bottom"
+              gc-mode="gauge"></gc-cropstatus>
+
+      <p class="content" style="padding: 20px;"></p>
+
+      <gc-cropstatus gc-widget-id="cropstatus3" 
+              gc-apikey="39553fb7-7f6f-4945-9b84-a4c8745bdbec" 
+              gc-host="geocledian.com" 
+              gc-parcel-id="4483"
+              gc-legend-position="bottom"
+              gc-mode="pie"></gc-cropstatus>
     </div>
     
   </div>
