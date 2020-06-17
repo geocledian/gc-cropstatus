@@ -1,7 +1,7 @@
 /*
  Vue.js Geocledian cropstatus component
  created: 2019-11-04, jsommer
- last update: 2020-02-21, jsommer
+ last update: 2020-06-17, jsommer
  version: 0.9
 */
 "use strict";
@@ -51,6 +51,18 @@ Vue.component('gc-cropstatus', {
       type: String,
       default: 'geocledian.com'
     },
+    gcProxy: {
+      type: String,
+      default: undefined
+    },
+    gcApiBaseUrl: {
+      type: String,
+      default: "/agknow/api/v3"
+    },
+    gcApiSecure: {
+      type: Boolean,
+      default: true
+    }, 
     gcParcelId: {
       default: -1
     },
@@ -64,7 +76,7 @@ Vue.component('gc-cropstatus', {
     },
     gcAvailableOptions: {
       type: String,
-      default: "title,description,dateSelector,legend,logo" // available options
+      default: "title,description,dateSelector,legend" // available options
     },
     gcWidgetCollapsed: {
       type: Boolean,
@@ -107,7 +119,7 @@ Vue.component('gc-cropstatus', {
                 </div>
                 </div>
                 <!-- watermark -->
-                <div :class="[this.availableOptions.includes('logo') ? 'is-inline-block': 'is-hidden', 'is-pulled-right']"
+                <div :class="[this.availableOptions.includes('nologo') ? 'is-hidden': 'is-inline-block', 'is-pulled-right']"
                   style="opacity: 0.65;">
                   <span style="vertical-align: top; font-size: 0.7rem;">powered by</span><br>
                   <img src="img/logo.png" alt="geo|cledian" style="width: 100px; margin: -10px 0;">
@@ -335,6 +347,27 @@ Vue.component('gc-cropstatus', {
     },
   },
   methods: {
+    getApiUrl: function (endpoint) {
+      /* handles requests directly against  geocledian endpoints with API keys
+          or (if gcProxy is set)
+        also requests against the URL of gcProxy prop without API-Key; then
+        the proxy or that URL has to add the api key to the requests against geocledian endpoints
+      */
+      let protocol = 'http';
+
+      if (this.apiSecure) {
+        protocol += 's';
+      }
+
+      // if (this.apiEncodeParams) {
+      //   endpoint = encodeURIComponent(endpoint);
+      // }
+      
+      // with or without apikey depending on gcProxy property
+      return (this.gcProxy ? 
+                protocol + '://' + this.gcProxy + this.apiBaseUrl + endpoint  : 
+                protocol + '://' + this.gcHost + this.apiBaseUrl + endpoint + "?key="+this.apiKey);
+    },
     toggleCropstatus: function () {
       this.gcWidgetCollapsed = !this.gcWidgetCollapsed;
     },
@@ -381,17 +414,15 @@ Vue.component('gc-cropstatus', {
       document.getElementById("chart_" + this.gcWidgetId).classList.add("is-hidden");
       document.getElementById("chartSpinner_" + this.gcWidgetId).classList.remove("is-hidden");
   
-      const productName = "status";
-      
-      var params = "/parcels/"+parcel_id+"/"+ productName +"?key="+
-                      this.apiKey +"&sdate="+ sdate;
+      const endpoint = "/parcels/"+parcel_id+"/status";
+      let params = "&sdate="+ sdate;
     
-      var xmlHttp = new XMLHttpRequest();
-      var async = true;
+      let xmlHttp = new XMLHttpRequest();
+      let async = true;
   
       //Show requests on the DEBUG console for developers
       console.debug("getCropStatus()");
-      console.debug("GET " + this.apiUrl + params);
+      console.debug("GET " + this.getApiUrl(endpoint) + params);
   
       //clear chart
       this.chart.unload();
@@ -439,7 +470,7 @@ Vue.component('gc-cropstatus', {
         }
       }.bind(this);
 
-      xmlHttp.open("GET", this.apiUrl + params, async);
+      xmlHttp.open("GET", this.getApiUrl(endpoint) + params, async);
       xmlHttp.send();
     },
     createChartData: function() {
