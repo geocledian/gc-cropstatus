@@ -4,8 +4,8 @@
  init script for using the component without any existent outer Vue instance
 
  created:     2019-11-04, jsommer
- last update: 2020-04-29, jsommer
- version: 0.9
+ last update: 2020-06-21, Tarun
+ version: 0.9.1
 */
 
 // root Vue instance
@@ -22,7 +22,8 @@ var i18n;
 const libs = ['https://unpkg.com/vue@2.6.11/dist/vue.min.js',
               'https://unpkg.com/vue-i18n@8.17.5/dist/vue-i18n.js',
               'js/d3.v3.min.js', // v4.13.0 
-              'js/c3.min.js' // v0.7.11
+              'js/c3.min.js', // v0.7.11,
+              'https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js'
             ];
 
 function gcGetBaseURL() {
@@ -113,7 +114,7 @@ function initComponent() {
 
     // load map component dynamically
     // change for DEBUG to js/gc-cropstatus.js
-    loadJSscript("js/gc-cropstatus.min.js", function() {
+    loadJSscript("js/gc-cropstatus.js", function() {
 
         /* when ready, init global vue root instance */
         var vmRoot = new Vue({
