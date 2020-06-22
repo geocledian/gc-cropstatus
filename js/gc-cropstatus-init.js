@@ -114,7 +114,7 @@ function initComponent() {
 
     // load map component dynamically
     // change for DEBUG to js/gc-cropstatus.js
-    loadJSscript("js/gc-cropstatus.js", function() {
+    loadJSscript("js/gc-cropstatus.min.js", function() {
 
         /* when ready, init global vue root instance */
         var vmRoot = new Vue({

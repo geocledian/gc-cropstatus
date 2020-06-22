@@ -1,7 +1,7 @@
 /*
  Vue.js Geocledian cropstatus component
  created: 2019-11-04, jsommer
- last update: 2020-06-21, Tarun
+ last update: 2020-06-22, Tarun
  version: 0.9.1
 */
 "use strict";
@@ -421,7 +421,6 @@ Vue.component('gc-cropstatus', {
       this.chart.unload();
 
       // axios implemented start
-      let temp = this;
       axios({
         method: 'GET',
         url: this.getApiUrl(endpoint) + params,
@@ -430,20 +429,20 @@ Vue.component('gc-cropstatus', {
           try {
             var result  = response.data;
             if (result.content === "key is not authorized" || result.content === "api key validity expired") {
-              temp.showMsg(result.content)
+              this.showMsg(result.content)
               return;
             }
-            var row = temp.getCurrentParcel();
+            var row = this.getCurrentParcel();
             if (result.hasOwnProperty("crop_status")) {
-              temp.crop_status = result;
+              this.crop_status = result;
             }
           } catch (err) {
             console.error(err);
-            temp.showMsg('');
+            this.showMsg('');
           }
         }
-      }).catch(err => {
-        temp.showMsg('');
+      }.bind(this)).catch(err => {
+        this.showMsg('');
       })
       // axios implemented end
 
