@@ -1,8 +1,8 @@
 /*
  Vue.js Geocledian cropstatus component
  created: 2019-11-04, jsommer
- last update: 2020-06-17, jsommer
- version: 0.9
+ last update: 2020-06-22, Tarun
+ version: 0.9.1
 */
 "use strict";
 
@@ -407,71 +407,45 @@ Vue.component('gc-cropstatus', {
       return {parcel_id: this.currentParcelID};
     },
     getCropStatus: function(parcel_id, sdate) {
+      // Code optimize
 
-      try { document.getElementById("sDate_"+this.gcWidgetId).classList.remove("is-hidden"); } catch (ex) {}
-      try { document.getElementById("desc_" + this.gcWidgetId).classList.remove("is-hidden"); } catch (ex) {}
-      document.getElementById("chartNotice_"+this.gcWidgetId).classList.add("is-hidden");
-      document.getElementById("chart_" + this.gcWidgetId).classList.add("is-hidden");
-      document.getElementById("chartSpinner_" + this.gcWidgetId).classList.remove("is-hidden");
-  
+      this.hideMsg('');
       const endpoint = "/parcels/"+parcel_id+"/status";
       let params = "&sdate="+ sdate;
     
-      let xmlHttp = new XMLHttpRequest();
-      let async = true;
-  
       //Show requests on the DEBUG console for developers
       console.debug("getCropStatus()");
       console.debug("GET " + this.getApiUrl(endpoint) + params);
   
       //clear chart
       this.chart.unload();
-  
-      xmlHttp.onreadystatechange=function()
-      {
-        if (xmlHttp.readyState==4)
-        {
-          //console.log(xmlHttp.responseText);
-          try {
-            var tmp  = JSON.parse(xmlHttp.responseText);
 
-            if (tmp.content == "key is not authorized") {
-              // show message, hide spinner
-              try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
-              try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
-              document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, the given API key is not authorized!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a> for a valid API key.";
-              document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
-              document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
+      // axios implemented start
+      axios({
+        method: 'GET',
+        url: this.getApiUrl(endpoint) + params,
+      }).then(function (response) {
+        if(response.status === 200){
+          try {
+            var result  = response.data;
+            if (result.content === "key is not authorized" || result.content === "api key validity expired") {
+              this.showMsg(result.content)
               return;
             }
-            if (tmp.content == 	"api key validity expired") {
-                // show message, hide spinner
-                try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
-                try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
-                document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, the given API key's validity expired!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a>for a valid API key.";
-                document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
-                document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
-                return;
-            }
-            
             var row = this.getCurrentParcel();
-            
-            if (tmp.hasOwnProperty("crop_status")) {
-              this.crop_status = tmp;
+            if (result.hasOwnProperty("crop_status")) {
+              this.crop_status = result;
             }
           } catch (err) {
             console.error(err);
-            try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
-            try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
-            document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, an error occurred!<br>Please check the console log for more information.";
-            document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
-            document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
+            this.showMsg('');
           }
         }
-      }.bind(this);
+      }.bind(this)).catch(err => {
+        this.showMsg('');
+      })
+      // axios implemented end
 
-      xmlHttp.open("GET", this.getApiUrl(endpoint) + params, async);
-      xmlHttp.send();
     },
     createChartData: function() {
 
@@ -619,6 +593,31 @@ Vue.component('gc-cropstatus', {
       script.onload = function () {
         callback();
       };
+    },
+
+    showMsg : function (msg) {
+      try { document.getElementById("sDate_"+this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+      try { document.getElementById("desc_" + this.gcWidgetId).classList.add("is-hidden"); } catch (ex) {}
+
+      if(msg === 'key is not authorized'){
+        document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, the given API key is not authorized!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a> for a valid API key.";
+      }
+      else if(msg === 'api key validity expired'){
+        document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, the given API key's validity expired!<br> Please contact <a href='https://www.geocledian.com'>geo|cledian</a>for a valid API key.";
+      } else{
+        document.getElementById("chartNotice_" + this.gcWidgetId).innerHTML = "Sorry, an error occurred!<br>Please check the console log for more information.";
+      }
+
+      document.getElementById("chartNotice_" + this.gcWidgetId).classList.remove("is-hidden");
+      document.getElementById("chartSpinner_" + this.gcWidgetId).classList.add("is-hidden");
+    },
+
+   hideMsg : function (msg) {
+      try { document.getElementById("sDate_"+this.gcWidgetId).classList.remove("is-hidden"); } catch (ex) {}
+      try { document.getElementById("desc_" + this.gcWidgetId).classList.remove("is-hidden"); } catch (ex) {}
+      document.getElementById("chartNotice_"+this.gcWidgetId).classList.add("is-hidden");
+      document.getElementById("chart_" + this.gcWidgetId).classList.add("is-hidden");
+      document.getElementById("chartSpinner_" + this.gcWidgetId).classList.remove("is-hidden");
     }
   },
   beforeDestroy: function () {
