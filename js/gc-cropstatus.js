@@ -132,7 +132,7 @@ Vue.component('gc-cropstatus', {
 
                 <div :id="'chartNotice_'+gcWidgetId" class="content is-hidden"></div>
 
-                <div :id="'chartSpinner_'+gcWidgetId" class="chartSpinner spinner is-hidden">
+                <div :id="'chartSpinner_'+gcWidgetId" class="chartSpinner cropstatus-spinner is-hidden"  style="max-height: 50px!important;">
                   <div class="rect1"></div>
                   <div class="rect2"></div>
                   <div class="rect3"></div>
