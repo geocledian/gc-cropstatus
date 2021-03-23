@@ -89,6 +89,10 @@ Vue.component('gc-cropstatus', {
     gcLegendPosition: {
       type: String,
       default: 'inset' // 'bottom', 'right' or 'inset'
+    },
+    gcWhiteLabel: {
+      type: Boolean,
+      default: false // true or false
     }
   },
   template: `<div :id="gcWidgetId" class="gc-cropstatus" style="max-width: 18.0rem; min-width: 8rem;">       
@@ -119,7 +123,7 @@ Vue.component('gc-cropstatus', {
                 </div>
                 </div>
                 <!-- watermark -->
-                <div :class="[this.availableOptions.includes('nologo') ? 'is-hidden': 'is-inline-block', 'is-pulled-right']"
+                <div :class="[this.gcWhiteLabel ? 'is-hidden': 'is-inline-block', 'is-pulled-right']"
                   style="opacity: 0.65;">
                   <span style="vertical-align: top; font-size: 0.7rem;">powered by</span><br>
                   <img src="img/logo.png" alt="geo|cledian" style="width: 100px; margin: -10px 0;">
