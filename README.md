@@ -35,6 +35,7 @@ This widget is customizeable via HTML attributes and supports the setting of the
 - gc-available-options: limit the available options, e.g. "" for not title at all; default: "title,description,dateSelector,legend"
 - gc-legend-position: sets the position of the legend of the chart: 'bottom', 'right' or 'inset'; default: 'bottom'
 - gc-widget-collapsed: start the widget collapsed or not; default: "false"
+- gc-white-label: white label use of widget (= hide geocledian logo); default: "false"
 
 ### Advanced options
 #### Proxy mode / URL options
